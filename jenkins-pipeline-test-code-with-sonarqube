@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout the code') {
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Rahul-training/Devops']])
+            }
+        }
+		stage('INSTALL MAVEN BUILD TOOL') {
+            steps {
+                sh 'wget https://dlcdn.apache.org/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz'
+				sh 'tar -xzf apache-maven-3.9.6-bin.tar.gz'
+            }
+        }
+		stage('COMPILE THE APPLICATION') {
+            steps {
+                dir('/var/lib/jenkins/workspace/test/addressbook/addressbook_main')
+				{
+				sh '/var/lib/jenkins/workspace/test/apache-maven-3.9.6/bin/mvn compile'
+				}
+            }
+        }
+		stage('TEST THE APPLICATION') {
+            steps {
+                dir('/var/lib/jenkins/workspace/test/addressbook/addressbook_main')
+				{
+				sh '/var/lib/jenkins/workspace/test/apache-maven-3.9.6/bin/mvn test'
+				}
+            }
+        }
+		stage('SONARQUBE ANALYSIS') {
+            steps {
+                dir('/var/lib/jenkins/workspace/test/addressbook/addressbook_main')
+				{
+				withSonarQubeEnv(credentialsId: 'sonar-token', installationName: 'sonar')
+				{
+				   sh "/var/lib/jenkins/workspace/test/apache-maven-3.9.6/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=test -Dsonar.projectName='test'"
+				}
+            }
+        }
+    }
+}
