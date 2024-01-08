@@ -1,0 +1,73 @@
+---
+# tasks file for /etc/ansible/roles/test
+- name: Update all packages to their latest version
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+  when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "22"
+- name: Update all packages to their latest version
+  yum:
+    update_cache: yes
+  when: ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2023"
+- name: Create file as /etc/apt/sources.list.d/jenkins.list with content"
+  copy:
+    dest: /etc/apt/sources.list.d/jenkins.list
+    content: |
+      deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/
+  when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "22"
+- name: Create file as /etc/yum.repos.d/jenkins.repo & Add the Jenkins repo using the following command
+  get_url:
+    url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+    dest: /etc/yum.repos.d/jenkins.repo
+  when: ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2023"
+- name: Download the Jenkins GPG key and store it in the system's keyring
+  get_url:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+    dest: /usr/share/keyrings/jenkins-keyring.asc
+  when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "22"
+- name: Import a key file from Jenkins-CI to enable installation from the package
+  rpm_key:
+    state: present
+    key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+  when: ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2023"
+- name: INSTALLING jenkins PACKAGES
+  apt:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - fontconfig
+    - openjdk-17-jre
+    - jenkins
+  when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "22"
+- name: Install java17
+  dnf:
+    name: java-17-amazon-corretto
+    state: present
+  when: ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2023"
+- name: Update all packages to their latest version
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+  when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "22"
+- name: INSTALLING jenkins PACKAGES
+  yum:
+    name: jenkins
+    state: present
+  when: ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2023"
+- name: INSTALLING jenkins PACKAGES
+  yum:
+    name: jenkins
+    state: present
+  when: ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2023"
+- name: Start jenkins service
+  service:
+    name: jenkins
+    state: started
+    enabled: yes
+- name: Store the value of initial password in variable
+  shell:
+    cat /var/lib/jenkins/secrets/initialAdminPassword
+  register: command_output
+- name: Display INITIALADMINPASSWORD
+  debug:
+    var: command_output.stdout_lines
