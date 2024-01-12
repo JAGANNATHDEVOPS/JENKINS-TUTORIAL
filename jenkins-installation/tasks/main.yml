@@ -30,13 +30,19 @@
     state: present
     key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
   when: ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2023"
-- name: INSTALLING jenkins PACKAGES
+- name: INSTALLING java, fontconfig
   apt:
     name: '{{ item }}'
     state: present
   with_items:
     - fontconfig
     - openjdk-17-jre
+  when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "22"
+- name: INSTALLING jenkins PACKAGES
+  apt:
+    name: '{{ item }}'
+    state: present
+  with_items:
     - jenkins
   when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "22"
 - name: Install java17
