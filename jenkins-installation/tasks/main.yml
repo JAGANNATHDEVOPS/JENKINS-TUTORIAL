@@ -30,6 +30,16 @@
     state: present
     key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
   when: ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2023"
+
+- name: Update all packages to their latest version
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+  when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "22"
+- name: Update all packages to their latest version
+  yum:
+    update_cache: yes
+  when: ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2023"
 - name: INSTALLING java, fontconfig
   apt:
     name: '{{ item }}'
